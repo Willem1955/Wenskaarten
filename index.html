@@ -119,14 +119,14 @@ h2 {
 .heading p { color: var(--muted); font-size: 15px; }
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
 }
 .category {
   display: block;
   background: var(--light);
   border: 1px solid var(--line);
-  padding: 12px 12px 18px;
+  padding: 6px 6px 10px;
   text-align: center;
   transition: .2s;
 }
@@ -135,7 +135,7 @@ h2 {
   box-shadow: 0 10px 25px #59483d15;
 }
 .art {
-  min-height: 230px;
+  min-height: 115px;
   display: grid;
   place-items: center;
   position: relative;
@@ -150,6 +150,14 @@ h2 {
   inset: 15px;
   border: 1px solid #b99e85;
   opacity: .7;
+}
+  .category h3 {
+  font-size:16px;
+  margin:8px 0 4px;
+}
+
+.category p {
+  font-size:11px;
 }
 .art span { position: relative; color: #806750; font-size: 46px; font-style: italic; }
 h3 { margin: 16px 0 4px; font-size: 22px; font-weight: normal; }
