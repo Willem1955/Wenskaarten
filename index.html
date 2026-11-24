@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -7,21 +8,6 @@
 <title>Mijn Wenskaarten</title>
 
 <style>
-.kaart {
-  background: #fbf8f2;
-  padding: 12px;
-  border-radius: 12px;
-  text-align: center;
-  border: 1px solid var(--line);
-}
-.kaart img {
-  width: 320px;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 8px;
-}
-.kaart p { margin: 10px 0 0; color: var(--muted); }
-
 :root {
   --paper: #f5f0e8;
   --light: #fbf8f2;
@@ -117,11 +103,21 @@ h2 {
   margin: 10px 0;
 }
 .heading p { color: var(--muted); font-size: 15px; }
+
+/* Categorieën: 6 naast elkaar */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   gap: 12px;
 }
+
+/* Wenskaarten: 3 naast elkaar */
+#kaart-overzicht {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
 .category {
   display: block;
   background: var(--light);
@@ -151,17 +147,53 @@ h2 {
   border: 1px solid #b99e85;
   opacity: .7;
 }
-  .category h3 {
-  font-size:16px;
-  margin:8px 0 4px;
+.category h3 {
+  font-size: 16px;
+  margin: 8px 0 4px;
+}
+.art span {
+  position: relative;
+  color: #806750;
+  font-size: 46px;
+  font-style: italic;
+}
+h3 { margin: 16px 0 4px; font-size: 22px; font-weight: normal; }
+.category p {
+  margin: 0;
+  color: var(--muted);
+  font: 11px Arial, sans-serif;
+  letter-spacing: .08em;
 }
 
-.category p {
-  font-size:11px;
+/* Wenskaarten */
+.kaart {
+  background: #fbf8f2;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  border: 1px solid var(--line);
+  min-width: 0;
 }
-.art span { position: relative; color: #806750; font-size: 46px; font-style: italic; }
-h3 { margin: 16px 0 4px; font-size: 22px; font-weight: normal; }
-.category p { margin: 0; color: var(--muted); font: 12px Arial, sans-serif; letter-spacing: .08em; }
+.kaart img {
+  width: 100%;
+  height: 320px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+}
+.kaart p { margin: 10px 0 0; color: var(--muted); }
+
+#kaart-overzicht .kaart button {
+  margin-top: 12px;
+  padding: 9px 15px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font: 12px Arial, sans-serif;
+  border-radius: 5px;
+}
+
 .note {
   max-width: 750px;
   margin: 0 auto 55px;
@@ -219,16 +251,6 @@ footer {
   color: var(--ink);
 }
 .beheer-form button, .actieknop {
-  #kaart-overzicht .kaart button {
-  margin-top: 12px;
-  padding: 9px 15px;
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent);
-  cursor: pointer;
-  font: 12px Arial, sans-serif;
-  border-radius: 5px;
-}
   padding: 12px 18px;
   border: 1px solid var(--accent);
   background: var(--accent);
@@ -252,26 +274,36 @@ footer {
   color: var(--muted);
   font: 13px/1.5 Arial, sans-serif;
 }
-#kaart-overzicht .kaart { min-width: 0; }
-#kaart-overzicht img { background: #fff; }
 #kaart-overzicht:empty::after {
   content: "Er zijn nog geen kaarten gepubliceerd.";
   color: var(--muted);
   font: 14px Arial, sans-serif;
 }
+
+/* Mobiele weergave */
 @media (max-width: 720px) {
   header { flex-direction: column; padding: 20px 5%; }
   nav { gap: 15px; flex-wrap: wrap; justify-content: center; }
   .hero { padding: 58px 7% 48px; }
   .intro { font-size: 16px; }
-  .grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  #kaart-overzicht {
+    grid-template-columns: repeat(2, 1fr);
+  }
   .art { min-height: 175px; }
   .art span { font-size: 36px; }
   .category { padding: 8px 8px 14px; }
   h3 { font-size: 19px; }
+  .kaart img { height: 280px; }
 }
+
 @media (max-width: 390px) {
   .grid { grid-template-columns: 1fr; }
+  #kaart-overzicht { grid-template-columns: 1fr; }
   .art { min-height: 210px; }
 }
 </style>
@@ -404,33 +436,31 @@ footer {
     }
   });
 
+  let beheerderIngelogd = false;
 
-let beheerderIngelogd = false;
+  function toonGebruiker(user) {
+    const email = user?.email?.toLowerCase() || "";
+    const toegelaten = ALLOWED_EMAILS.includes(email);
 
-function toonGebruiker(user) {
-  const email = user?.email?.toLowerCase() || "";
-  const toegelaten = ALLOWED_EMAILS.includes(email);
+    beheerderIngelogd = !!(user && toegelaten);
 
-  beheerderIngelogd = !!(user && toegelaten);
-
-  if (beheerderIngelogd) {
-    loginGedeelte.style.display = "none";
-    uploadGedeelte.classList.add("open");
-    document.getElementById("ingelogd-als").textContent = "Ingelogd als " + email;
-    status("Je bent ingelogd. Je kunt nu een kaart publiceren.");
-  } else {
-    uploadGedeelte.classList.remove("open");
-    loginGedeelte.style.display = "block";
-    document.getElementById("ingelogd-als").textContent = "";
-    if (user && !toegelaten) {
-      client.auth.signOut();
-      status("Dit e-mailadres heeft geen uploadtoegang.");
+    if (beheerderIngelogd) {
+      loginGedeelte.style.display = "none";
+      uploadGedeelte.classList.add("open");
+      document.getElementById("ingelogd-als").textContent = "Ingelogd als " + email;
+      status("Je bent ingelogd. Je kunt nu een kaart publiceren.");
+    } else {
+      uploadGedeelte.classList.remove("open");
+      loginGedeelte.style.display = "block";
+      document.getElementById("ingelogd-als").textContent = "";
+      if (user && !toegelaten) {
+        client.auth.signOut();
+        status("Dit e-mailadres heeft geen uploadtoegang.");
+      }
     }
+
+    toonKaarten();
   }
-
-  toonKaarten();
-}
-
 
   document.getElementById("login-form").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -520,74 +550,73 @@ function toonGebruiker(user) {
     "jubilea": "Jubilea",
     "andere-momenten": "Andere momenten"
   };
+
   let actieveCategorie = "alle";
   let alleKaarten = [];
 
+  function toonKaarten() {
+    const overzicht = document.getElementById("kaart-overzicht");
+    overzicht.innerHTML = "";
 
-function toonKaarten() {
-  const overzicht = document.getElementById("kaart-overzicht");
-  overzicht.innerHTML = "";
+    const zichtbaar = actieveCategorie === "alle"
+      ? alleKaarten
+      : alleKaarten.filter(kaart => kaart.categorie === actieveCategorie);
 
-  const zichtbaar = actieveCategorie === "alle"
-    ? alleKaarten
-    : alleKaarten.filter(kaart => kaart.categorie === actieveCategorie);
+    document.getElementById("collectie-uitleg").textContent = actieveCategorie === "alle"
+      ? "De gepubliceerde kaarten verschijnen hieronder. Kies onderaan een gelegenheid om te filteren."
+      : "Kaarten in de categorie " + categorieNamen[actieveCategorie] + ".";
 
-  document.getElementById("collectie-uitleg").textContent = actieveCategorie === "alle"
-    ? "De gepubliceerde kaarten verschijnen hieronder. Kies onderaan een gelegenheid om te filteren."
-    : "Kaarten in de categorie " + categorieNamen[actieveCategorie] + ".";
-
-  if (zichtbaar.length === 0) {
-    const melding = document.createElement("p");
-    melding.textContent = "Er zijn nog geen kaarten in deze categorie gepubliceerd.";
-    melding.style.color = "var(--muted)";
-    overzicht.appendChild(melding);
-    return;
-  }
-
-  zichtbaar.forEach(item => {
-    const kaart = document.createElement("div");
-    kaart.className = "kaart";
-
-    const afbeelding = document.createElement("img");
-    afbeelding.src = PUBLIC_CARDS_BASE + encodeURIComponent(item.fileName);
-    afbeelding.alt = item.titel;
-    afbeelding.loading = "lazy";
-
-    const titel = document.createElement("p");
-    titel.textContent = item.titel;
-
-    kaart.append(afbeelding, titel);
-
-    if (beheerderIngelogd) {
-      const verwijderKnop = document.createElement("button");
-      verwijderKnop.textContent = "Verwijderen";
-      verwijderKnop.type = "button";
-
-      verwijderKnop.addEventListener("click", async () => {
-        if (!confirm("Wil je de kaart '" + item.titel + "' definitief verwijderen?")) return;
-
-        status("Kaart wordt verwijderd...");
-
-        const { data, error } = await client.functions.invoke("verwijder-kaart", {
-          body: { fileName: item.fileName }
-        });
-
-        if (error || !data?.success) {
-          status("Verwijderen is niet gelukt: " + (error?.message || data?.error || "Onbekende fout"));
-          return;
-        }
-
-kaart.remove();
-status("Kaart succesvol verwijderd.");
-      });
-
-      kaart.appendChild(verwijderKnop);
+    if (zichtbaar.length === 0) {
+      const melding = document.createElement("p");
+      melding.textContent = "Er zijn nog geen kaarten in deze categorie gepubliceerd.";
+      melding.style.color = "var(--muted)";
+      overzicht.appendChild(melding);
+      return;
     }
 
-    overzicht.appendChild(kaart);
-  });
-}
+    zichtbaar.forEach(item => {
+      const kaart = document.createElement("div");
+      kaart.className = "kaart";
 
+      const afbeelding = document.createElement("img");
+      afbeelding.src = PUBLIC_CARDS_BASE + encodeURIComponent(item.fileName);
+      afbeelding.alt = item.titel;
+      afbeelding.loading = "lazy";
+
+      const titel = document.createElement("p");
+      titel.textContent = item.titel;
+
+      kaart.append(afbeelding, titel);
+
+      if (beheerderIngelogd) {
+        const verwijderKnop = document.createElement("button");
+        verwijderKnop.textContent = "Verwijderen";
+        verwijderKnop.type = "button";
+
+        verwijderKnop.addEventListener("click", async () => {
+          if (!confirm("Wil je de kaart '" + item.titel + "' definitief verwijderen?")) return;
+
+          status("Kaart wordt verwijderd...");
+
+          const { data, error } = await client.functions.invoke("verwijder-kaart", {
+            body: { fileName: item.fileName }
+          });
+
+          if (error || !data?.success) {
+            status("Verwijderen is niet gelukt: " + (error?.message || data?.error || "Onbekende fout"));
+            return;
+          }
+
+          kaart.remove();
+          status("Kaart succesvol verwijderd.");
+        });
+
+        kaart.appendChild(verwijderKnop);
+      }
+
+      overzicht.appendChild(kaart);
+    });
+  }
 
   document.querySelectorAll(".category[data-categorie]").forEach(link => {
     link.addEventListener("click", () => {
@@ -650,6 +679,7 @@ status("Kaart succesvol verwijderd.");
   client.auth.getSession().then(({ data }) => {
     toonGebruiker(data.session?.user || null);
   });
+
   client.auth.onAuthStateChange((_event, session) => {
     toonGebruiker(session?.user || null);
   });
