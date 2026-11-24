@@ -202,7 +202,7 @@ footer {
   font: 13px Arial, sans-serif;
   color: var(--muted);
 }
-.beheer-form input {
+.beheer-form input, .beheer-form select {
   width: 100%;
   padding: 11px;
   border: 1px solid var(--line);
@@ -302,6 +302,16 @@ footer {
     <p class="beheer-uitleg" id="ingelogd-als"></p>
     <p class="beheer-uitleg">Kies een JPG-, PNG- of WEBP-afbeelding. De kaart wordt na upload publiek zichtbaar op deze website.</p>
     <form class="beheer-form" id="upload-form">
+      <label for="kaartcategorie">Kies een categorie</label>
+      <select id="kaartcategorie" required>
+        <option value="">-- Kies een categorie --</option>
+        <option value="verjaardagen">Verjaardagen</option>
+        <option value="kerstmis">Kerstmis</option>
+        <option value="huwelijk">Huwelijk</option>
+        <option value="pasen">Pasen</option>
+        <option value="jubilea">Jubilea</option>
+        <option value="andere-momenten">Andere momenten</option>
+      </select>
       <label for="kaartbestand">Kies de kaart op je computer</label>
       <input id="kaartbestand" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required>
       <button type="submit">Kaart publiceren</button>
@@ -315,7 +325,8 @@ footer {
   <div class="heading">
     <div class="eyebrow">De verzameling</div>
     <h2>Ontdek mijn kaarten</h2>
-    <p>De gepubliceerde kaarten verschijnen hieronder.</p>
+    <p id="collectie-uitleg">De gepubliceerde kaarten verschijnen hieronder. Kies onderaan een gelegenheid om te filteren.</p>
+    <p><a href="#collectie" id="toon-alle-kaarten" class="cta" style="margin-top:8px">Alle kaarten tonen</a></p>
   </div>
 
   <div class="grid" id="kaart-overzicht"></div>
@@ -323,17 +334,17 @@ footer {
   <div style="height:55px"></div>
 
   <div class="heading">
-    <div class="eyebrow">Binnenkort verder aan te vullen</div>
-    <h2>Gelegenheden</h2>
-    <p>De categorieën hieronder zijn voorlopig voorbeelden.</p>
+    <div class="eyebrow">Blader op gelegenheid</div>
+    <h2>Kies een categorie</h2>
+    <p>Klik op een categorie om de bijhorende kaarten te bekijken.</p>
   </div>
   <div class="grid">
-    <a class="category" href="#collectie"><div class="art"><span>✿</span></div><h3>Verjaardagen</h3><p>KAARTEN BEKIJKEN</p></a>
-    <a class="category" href="#collectie"><div class="art"><span>❋</span></div><h3>Kerstmis</h3><p>KAARTEN BEKIJKEN</p></a>
-    <a class="category" href="#collectie"><div class="art"><span>♡</span></div><h3>Huwelijk</h3><p>KAARTEN BEKIJKEN</p></a>
-    <a class="category" href="#collectie"><div class="art"><span>❀</span></div><h3>Pasen</h3><p>KAARTEN BEKIJKEN</p></a>
-    <a class="category" href="#collectie"><div class="art"><span>✧</span></div><h3>Jubilea</h3><p>KAARTEN BEKIJKEN</p></a>
-    <a class="category" href="#collectie"><div class="art"><span>✿</span></div><h3>Andere momenten</h3><p>KAARTEN BEKIJKEN</p></a>
+    <a class="category" href="#collectie" data-categorie="verjaardagen"><div class="art"><span>✿</span></div><h3>Verjaardagen</h3><p>KAARTEN BEKIJKEN</p></a>
+    <a class="category" href="#collectie" data-categorie="kerstmis"><div class="art"><span>❋</span></div><h3>Kerstmis</h3><p>KAARTEN BEKIJKEN</p></a>
+    <a class="category" href="#collectie" data-categorie="huwelijk"><div class="art"><span>♡</span></div><h3>Huwelijk</h3><p>KAARTEN BEKIJKEN</p></a>
+    <a class="category" href="#collectie" data-categorie="pasen"><div class="art"><span>❀</span></div><h3>Pasen</h3><p>KAARTEN BEKIJKEN</p></a>
+    <a class="category" href="#collectie" data-categorie="jubilea"><div class="art"><span>✧</span></div><h3>Jubilea</h3><p>KAARTEN BEKIJKEN</p></a>
+    <a class="category" href="#collectie" data-categorie="andere-momenten"><div class="art"><span>✿</span></div><h3>Andere momenten</h3><p>KAARTEN BEKIJKEN</p></a>
   </div>
 </section>
 
@@ -424,7 +435,12 @@ footer {
   document.getElementById("upload-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const bestand = document.getElementById("kaartbestand").files[0];
+    const categorie = document.getElementById("kaartcategorie").value;
 
+    if (!categorie) {
+      status("Kies eerst een categorie.");
+      return;
+    }
     if (!bestand) {
       status("Kies eerst een afbeelding.");
       return;
@@ -449,7 +465,7 @@ footer {
 
       const { data, error } = await client.functions.invoke("upload-kaart", {
         body: {
-          fileName: bestand.name,
+          fileName: categorie + "__" + bestand.name,
           contentBase64: base64
         }
       });
@@ -461,13 +477,73 @@ footer {
         throw new Error(data?.error || "De upload is niet gelukt.");
       }
 
-      status("Gelukt! " + bestand.name + " is gepubliceerd. De kaart verschijnt zodra GitHub Pages is bijgewerkt.");
+      status("Gelukt! " + bestand.name + " is gepubliceerd bij de gekozen categorie. De kaart verschijnt zodra GitHub Pages is bijgewerkt.");
       document.getElementById("upload-form").reset();
       setTimeout(laadKaarten, 5000);
     } catch (error) {
       console.error(error);
       status("Upload mislukt: " + (error.message || "onbekende fout"));
     }
+  });
+
+  const categorieNamen = {
+    "verjaardagen": "Verjaardagen",
+    "kerstmis": "Kerstmis",
+    "huwelijk": "Huwelijk",
+    "pasen": "Pasen",
+    "jubilea": "Jubilea",
+    "andere-momenten": "Andere momenten"
+  };
+  let actieveCategorie = "alle";
+  let alleKaarten = [];
+
+  function toonKaarten() {
+    const overzicht = document.getElementById("kaart-overzicht");
+    overzicht.innerHTML = "";
+
+    const zichtbaar = actieveCategorie === "alle"
+      ? alleKaarten
+      : alleKaarten.filter(kaart => kaart.categorie === actieveCategorie);
+
+    document.getElementById("collectie-uitleg").textContent = actieveCategorie === "alle"
+      ? "De gepubliceerde kaarten verschijnen hieronder. Kies onderaan een gelegenheid om te filteren."
+      : "Kaarten in de categorie " + categorieNamen[actieveCategorie] + ".";
+
+    if (zichtbaar.length === 0) {
+      const melding = document.createElement("p");
+      melding.textContent = "Er zijn nog geen kaarten in deze categorie gepubliceerd.";
+      melding.style.color = "var(--muted)";
+      overzicht.appendChild(melding);
+      return;
+    }
+
+    zichtbaar.forEach(item => {
+      const kaart = document.createElement("div");
+      kaart.className = "kaart";
+
+      const afbeelding = document.createElement("img");
+      afbeelding.src = PUBLIC_CARDS_BASE + encodeURIComponent(item.fileName);
+      afbeelding.alt = item.titel;
+      afbeelding.loading = "lazy";
+
+      const titel = document.createElement("p");
+      titel.textContent = item.titel;
+
+      kaart.append(afbeelding, titel);
+      overzicht.appendChild(kaart);
+    });
+  }
+
+  document.querySelectorAll(".category[data-categorie]").forEach(link => {
+    link.addEventListener("click", () => {
+      actieveCategorie = link.dataset.categorie;
+      toonKaarten();
+    });
+  });
+
+  document.getElementById("toon-alle-kaarten").addEventListener("click", () => {
+    actieveCategorie = "alle";
+    toonKaarten();
   });
 
   async function laadKaarten() {
@@ -478,27 +554,34 @@ footer {
         throw new Error("De kaartenlijst kon niet worden opgehaald.");
       }
       const bestanden = await response.json();
-      overzicht.innerHTML = "";
-
-      bestanden
+      alleKaarten = bestanden
         .filter(item => item.type === "file" && /\.(jpe?g|png|webp)$/i.test(item.name))
         .filter(item => item.name.toLowerCase() !== "55 jaar.jpg")
-        .sort((a, b) => a.name.localeCompare(b.name, "nl"))
-        .forEach(item => {
-          const kaart = document.createElement("div");
-          kaart.className = "kaart";
+        .map(item => {
+          const scheiding = item.name.indexOf("__");
+          let categorie = "andere-momenten";
+          let titelBestand = item.name;
 
-          const afbeelding = document.createElement("img");
-          afbeelding.src = PUBLIC_CARDS_BASE + encodeURIComponent(item.name);
-          afbeelding.alt = item.name.replace(/\.[^.]+$/, "");
-          afbeelding.loading = "lazy";
+          if (scheiding > 0) {
+            const mogelijkeCategorie = item.name.substring(0, scheiding);
+            if (categorieNamen[mogelijkeCategorie]) {
+              categorie = mogelijkeCategorie;
+              titelBestand = item.name.substring(scheiding + 2);
+            }
+          } else if (item.name.toLowerCase() === "paashaas.jpg") {
+            // De reeds gepubliceerde testkaart Paashaas hoort bij Pasen.
+            categorie = "pasen";
+          }
 
-          const titel = document.createElement("p");
-          titel.textContent = item.name.replace(/\.[^.]+$/, "");
+          return {
+            fileName: item.name,
+            categorie,
+            titel: titelBestand.replace(/\.[^.]+$/, "")
+          };
+        })
+        .sort((a, b) => a.titel.localeCompare(b.titel, "nl"));
 
-          kaart.append(afbeelding, titel);
-          overzicht.appendChild(kaart);
-        });
+      toonKaarten();
     } catch (error) {
       console.error(error);
       overzicht.innerHTML = "";
