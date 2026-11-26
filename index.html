@@ -582,6 +582,42 @@ footer {
       afbeelding.src = PUBLIC_CARDS_BASE + encodeURIComponent(item.fileName);
       afbeelding.alt = item.titel;
       afbeelding.loading = "lazy";
+      afbeelding.style.cursor = "zoom-in";
+      afbeelding.addEventListener("click", () => {
+  const vergroting = document.createElement("div");
+  vergroting.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    cursor: zoom-out;
+    padding: 20px;
+  `;
+
+  const groteAfbeelding = document.createElement("img");
+  groteAfbeelding.src = afbeelding.src;
+  groteAfbeelding.alt = afbeelding.alt;
+  groteAfbeelding.style.cssText = `
+    max-width: 95%;
+    max-height: 95%;
+    object-fit: contain;
+  `;
+
+  vergroting.appendChild(groteAfbeelding);
+  document.body.appendChild(vergroting);
+
+  vergroting.addEventListener("click", () => vergroting.remove());
+
+  document.addEventListener("keydown", function sluiten(event) {
+    if (event.key === "Escape") {
+      vergroting.remove();
+      document.removeEventListener("keydown", sluiten);
+    }
+  });
+});
 
       const titel = document.createElement("p");
       titel.textContent = item.titel;
